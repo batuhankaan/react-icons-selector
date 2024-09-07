@@ -113,6 +113,7 @@ const ReactIconsSelector = ({
   return (
     <div>
       <button
+        type="button"
         className={buttonClassName}
         style={buttonStyle}
         onClick={openModal}
@@ -130,7 +131,11 @@ const ReactIconsSelector = ({
           >
             <div className="riselector-modal-header">
               <h3>{language.headerText}</h3>
-              <button type="button" className="riselector-close-modal" onClick={closeModal}>
+              <button
+                type="button"
+                className="riselector-close-modal"
+                onClick={closeModal}
+              >
                 {React.createElement(libraries["Ionicons 4"]["IoIosClose"], {
                   size: 25,
                 })}
