@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import ReactIconsSelector from "./ReactIconsSelector";
-import libraries from "./libraries";
+import ReactIconsSelector from "../ReactIconsSelector";
+import libraries from "../libraries";
 export default {
   title: "Icon Selector Modal",
   component: ReactIconsSelector,

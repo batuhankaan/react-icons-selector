@@ -1,14 +1,9 @@
 {
-  "name": "react-iconspicker",
-  "version": "0.1.0",
-  "private": false,
+  "name": "react-icons-selector",
+  "version": "0.1.6",
   "description": "A customizable icon picker component for React with support for multiple icon libraries.",
-  "keywords": [
-    "react",
-    "icons",
-    "picker",
-    "selector"
-  ],
+  "main": "lib/ReactIconsSelector.js",
+  "keywords": ["react", "icons", "picker", "selector"],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -27,26 +22,13 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+   "storybook": "storybook dev -p 6006"
   },
   "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest",
-      "plugin:storybook/recommended"
-    ]
+    "extends": ["react-app", "react-app/jest", "plugin:storybook/recommended"]
   },
   "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
+    "production": [">0.2%", "not dead", "not op_mini all"],
     "development": [
       "last 1 chrome version",
       "last 1 firefox version",

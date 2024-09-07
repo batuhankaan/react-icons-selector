@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import libraries from "./src/stories/libraries";
-import "./assets/IconSelector.css";
+import libraries from "./libraries";
+import "./IconSelector.css";
 
 const debounce = (func, delay) => {
   let timeoutId;
