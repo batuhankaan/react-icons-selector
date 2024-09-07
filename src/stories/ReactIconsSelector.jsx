@@ -113,6 +113,7 @@ const ReactIconsSelector = ({
   return (
     <div>
       <button
+        type="button"
         className={buttonClassName}
         style={buttonStyle}
         onClick={openModal}
