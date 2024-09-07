@@ -1,6 +1,6 @@
 {
   "name": "react-icons-selector",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "A customizable icon picker component for React with support for multiple icon libraries.",
   "main": "lib/ReactIconsSelector.js",
   "keywords": [

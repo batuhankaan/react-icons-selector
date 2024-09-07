@@ -5,7 +5,6 @@ A simple and customizable icon selector component supporting multiple icon libra
 
 ## Table of Contents
 
-- [Introduction](#introduction)
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -55,13 +54,14 @@ const MyComponent = () => {
 export default MyComponent;
 ```
 
-## Customized Example
+## Customization
 
 Here’s an example of using the **React Icons Selector** component with custom settings:
 
 ```jsx
 import React, { useState } from 'react';
 import ReactIconsSelector from 'react-icons-selector';
+import libraries from "react-icons-selector/lib/libraries";
 
 const MyComponent = () => {
   const [selectedIcon, setSelectedIcon] = useState({
