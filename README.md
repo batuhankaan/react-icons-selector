@@ -187,6 +187,12 @@ This package has the following peer dependencies:
 }
 ```
 
+## Changelog
+
+### v0.3.3
+- Fixed "Maximum update depth exceeded" error that could occur in certain situations
+- Optimized useEffect dependency management to prevent infinite render loops
+
 ## RenderIcon Component
 
 The package exports a `RenderIcon` component that makes it easy to render your selected icons:
