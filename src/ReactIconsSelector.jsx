@@ -193,7 +193,7 @@ const ReactIconsSelector = ({
 
   useEffect(() => {
     loadIcons();
-  }, [debouncedSearchTerm, activeLibrary, loadIcons]);
+  }, [debouncedSearchTerm, activeLibrary]);
 
   const memoizedIconsList = useMemo(() => displayedIcons, [displayedIcons]);
 
