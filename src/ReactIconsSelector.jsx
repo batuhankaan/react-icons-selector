@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import libraries from "./libraries";
 import "./IconSelector.css";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -44,170 +44,221 @@ const ReactIconsSelector = ({
   onSvgExport,
   iconSize = 35,
 }) => {
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [activeLibrary, setActiveLibrary] = useState("Home");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [displayedIcons, setDisplayedIcons] = useState([]);
+  // Memoize the onChange callback to prevent recreation on render
+  const memoizedOnChange = useMemo(() => onChange, [onChange]);
+  // Store all state and functions in a ref to avoid recreating them on each render
+  const stateRef = useRef({
+    modalIsOpen: false,
+    activeLibrary: "Home",
+    searchTerm: "",
+    debouncedSearchTerm: "",
+    displayedIcons: [],
+    tooltipPosition: null,
+  });
+
+  // DOM refs
   const buttonRef = useRef(null);
-  const [tooltipPosition, setTooltipPosition] = useState(null);
   const modalRef = useRef(null);
   const sidebarRef = useRef(null);
 
-  // Stable event handler using useCallback
-  const handleClickOutside = useCallback((event) => {
-    if (modalRef.current && 
+  // State for controlled inputs only - kept to minimum
+  const [searchTerm, setSearchTerm] = useState("");
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [displayedIcons, setDisplayedIcons] = useState([]);
+  const [tooltipPosition, setTooltipPosition] = useState(null);
+  const [activeLibrary, setActiveLibrary] = useState("Home");
+
+  // Function refs - these don't change between renders
+  const funcRef = useRef({
+    handleClickOutside: null,
+    openModal: null,
+    closeModal: null,
+    resetState: null,
+    handleLibraryChange: null,
+    getSvgString: null,
+    handleIconSelect: null,
+    loadIcons: null,
+    debounceSearch: null,
+  });
+
+  // Initialize function refs only once
+  if (!funcRef.current.resetState) {
+    funcRef.current.resetState = () => {
+      setDisplayedIcons([]);
+    };
+
+    funcRef.current.closeModal = () => {
+      setModalIsOpen(false);
+      setActiveLibrary("Home");
+      setSearchTerm("");
+      // Reset displayed icons on close
+      setDisplayedIcons([]);
+    };
+
+    funcRef.current.handleClickOutside = (event) => {
+      if (
+        modalRef.current && 
         !modalRef.current.contains(event.target) && 
         buttonRef.current && 
-        !buttonRef.current.contains(event.target)) {
-      closeModal();
-    }
-  }, [closeModal]);
+        !buttonRef.current.contains(event.target)
+      ) {
+        funcRef.current.closeModal();
+      }
+    };
 
-  // Attach and detach click outside listener
+    funcRef.current.openModal = () => {
+      setModalIsOpen(true);
+      funcRef.current.resetState();
+      
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        // Use a smaller fixed width for more consistent appearance
+        const tooltipWidth = Math.min(350, Math.max(280, rect.width * 1.2));
+        
+        // Calculate left position to center tooltip relative to button
+        const buttonCenter = rect.left + (rect.width / 2);
+        let left = buttonCenter - (tooltipWidth / 2);
+        
+        // Ensure tooltip doesn't go offscreen
+        if (left < 10) left = 10;
+        if (left + tooltipWidth > windowWidth - 10) left = windowWidth - tooltipWidth - 10;
+        
+        setTooltipPosition({
+          top: rect.bottom + window.scrollY + 5,
+          left,
+          width: tooltipWidth
+        });
+      }
+    };
+
+    funcRef.current.handleLibraryChange = (library) => {
+      setActiveLibrary(library);
+      funcRef.current.resetState();
+    };
+
+    funcRef.current.getSvgString = (iconComponent) => {
+      if (!iconComponent) return null;
+      const element = React.createElement(iconComponent, { size: iconSize });
+      const svg = renderToStaticMarkup(element);
+      return svg;
+    };
+
+    funcRef.current.handleIconSelect = (name, libraryName) => {
+      const selectedLibrary = libraryName || activeLibrary;
+      const iconData = {
+        name,
+        library: selectedLibrary,
+      };
+      
+      // Eğer yeni seçilen ikon mevcut değerle aynı değilse onChange'i çağır
+      // Bu, sonsuz döngüleri önler
+      if (!value || 
+          value.name !== iconData.name || 
+          value.library !== iconData.library) {
+        memoizedOnChange(iconData);
+      }
+      
+      if (onSvgExport) {
+        const iconComponent = libraries[selectedLibrary][name];
+        const svgString = funcRef.current.getSvgString(iconComponent);
+        onSvgExport(svgString, iconData);
+      }
+      
+      funcRef.current.closeModal();
+    };
+
+    funcRef.current.loadIcons = (debouncedSearchTermParam, activeLibraryParam) => {
+      const term = debouncedSearchTermParam || "";
+      const library = activeLibraryParam || "Home";
+
+      if (library === "Home") {
+        if (term.length < 2) {
+          setDisplayedIcons([]);
+          return;
+        }
+
+        const iconsList = [];
+        icons.forEach((libraryName) => {
+          const lib = libraries[libraryName];
+          Object.keys(lib).forEach((icon) => {
+            if (icon.toLowerCase().includes(term.toLowerCase())) {
+              iconsList.push({
+                name: icon,
+                IconComponent: lib[icon],
+                libraryName,
+              });
+            }
+          });
+        });
+
+        setDisplayedIcons(iconsList);
+      } else {
+        const lib = libraries[library];
+        const allIcons = Object.keys(lib).filter((icon) =>
+          icon.toLowerCase().includes(term.toLowerCase())
+        );
+        setDisplayedIcons(
+          allIcons.map((icon) => ({
+            name: icon,
+            IconComponent: lib[icon],
+          }))
+        );
+      }
+    };
+
+    // Create a stable debounced function
+    funcRef.current.debounceSearch = debounce((value) => {
+      funcRef.current.loadIcons(value, activeLibrary);
+    }, 300);
+  }
+
+  // Update internal state when props change
+  useEffect(() => {
+    stateRef.current = {
+      ...stateRef.current,
+      modalIsOpen,
+      activeLibrary,
+      searchTerm,
+      displayedIcons
+    };
+  }, [modalIsOpen, activeLibrary, searchTerm, displayedIcons]);
+
+  // Handle outside clicks
   useEffect(() => {
     if (modalIsOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('mousedown', funcRef.current.handleClickOutside);
     }
     
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', funcRef.current.handleClickOutside);
     };
-  }, [modalIsOpen, handleClickOutside]);
-  
+  }, [modalIsOpen]);
 
-  const openModal = useCallback(() => {
-    setModalIsOpen(true);
-    resetState();
-    
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const windowWidth = window.innerWidth;
-      // Use a smaller fixed width for more consistent appearance
-      const tooltipWidth = Math.min(350, Math.max(280, rect.width * 1.2));
-      
-      // Calculate left position to center tooltip relative to button
-      const buttonCenter = rect.left + (rect.width / 2);
-      let left = buttonCenter - (tooltipWidth / 2);
-      
-      // Ensure tooltip doesn't go offscreen
-      if (left < 10) left = 10;
-      if (left + tooltipWidth > windowWidth - 10) left = windowWidth - tooltipWidth - 10;
-      
-      setTooltipPosition({
-        top: rect.bottom + window.scrollY + 5,
-        left,
-        width: tooltipWidth
-      });
-    }
-  }, [resetState]);
-  
+  // Load icons when search term or library changes
+  useEffect(() => {
+    // We need to call loadIcons directly with the current state values
+    // to ensure it always has the latest values
+    funcRef.current.loadIcons(searchTerm, activeLibrary);
+  }, [searchTerm, activeLibrary]);
 
-  // Update closeModal to use the ref
-  const closeModal = useCallback(() => {
-    closeModalRef.current();
-  }, []);
-
-  // Move resetState to avoid closure issues
-  const resetState = useCallback(() => {
-    setDisplayedIcons([]);
-  }, []);
-
-  const handleLibraryChange = useCallback((library) => {
-    setActiveLibrary(library);
-    resetState();
-  }, [resetState]);
-
-  const getSvgString = useCallback((iconComponent) => {
-    if (!iconComponent) return null;
-    
-    const element = React.createElement(iconComponent, { size: iconSize });
-    const svg = renderToStaticMarkup(element);
-    return svg;
-  }, [iconSize]);
-
-  // Stable reference to closeModal to prevent dependency cycles
-  const closeModalRef = useRef(() => {
-    setModalIsOpen(false);
-    setActiveLibrary("Home");
-    setSearchTerm("");
-    setDebouncedSearchTerm("");
-  });
-
-  const handleIconSelect = useCallback((name, libraryName) => {
-    const selectedLibrary = libraryName || activeLibrary;
-    const iconData = {
-      name,
-      library: selectedLibrary,
-    };
-    
-    onChange(iconData);
-    
-    if (onSvgExport) {
-      const iconComponent = libraries[selectedLibrary][name];
-      const svgString = getSvgString(iconComponent);
-      onSvgExport(svgString, iconData);
-    }
-    
-    closeModalRef.current();
-  }, [onChange, onSvgExport, activeLibrary, getSvgString]);
-
-  const debounceSearch = debounce((value) => {
-    setDebouncedSearchTerm(value);
-  }, 300);
-
+  // Handle search input changes
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
+
     if (value.length >= 2) {
-      debounceSearch(value);
+      // Call the stable debounced function
+      funcRef.current.debounceSearch(value);
     } else {
-      setDebouncedSearchTerm("");
       setDisplayedIcons([]);
     }
   };
 
-  // Use useEffect directly instead of a separate callback to avoid dependency cycles
-  useEffect(() => {
-    // Reset icons if search term is too short in Home view
-    if (activeLibrary === "Home" && debouncedSearchTerm.length < 2) {
-      setDisplayedIcons([]);
-      return;
-    }
-    
-    // Prepare icons based on the active library and search term
-    if (activeLibrary === "Home") {
-      const iconsList = [];
-      icons.forEach((libraryName) => {
-        const lib = libraries[libraryName];
-        Object.keys(lib).forEach((icon) => {
-          if (icon.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) {
-            iconsList.push({
-              name: icon,
-              IconComponent: lib[icon],
-              libraryName,
-            });
-          }
-        });
-      });
-
-      setDisplayedIcons(iconsList);
-    } else {
-      const lib = libraries[activeLibrary];
-      const allIcons = Object.keys(lib).filter((icon) =>
-        icon.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-      );
-      setDisplayedIcons(
-        allIcons.map((icon) => ({
-          name: icon,
-          IconComponent: lib[icon],
-        }))
-      );
-    }
-  }, [debouncedSearchTerm, activeLibrary, icons]);
-
+  // Memoize icons list to prevent unnecessary re-renders
   const memoizedIconsList = useMemo(() => displayedIcons, [displayedIcons]);
 
+  // Modal content component
   const renderModalContent = () => (
     <>
       <div className="riselector-modal-header">
@@ -215,7 +266,7 @@ const ReactIconsSelector = ({
         <button
           type="button"
           className="riselector-close-modal"
-          onClick={closeModal}
+          onClick={funcRef.current.closeModal}
         >
           {React.createElement(libraries["Ionicons 4"]["IoIosClose"], {
             size: 18,
@@ -243,7 +294,7 @@ const ReactIconsSelector = ({
             <ul>
               <li
                 className={activeLibrary === "Home" ? "active" : ""}
-                onClick={() => handleLibraryChange("Home")}
+                onClick={() => funcRef.current.handleLibraryChange("Home")}
               >
                 {language.homeText}
               </li>
@@ -251,7 +302,7 @@ const ReactIconsSelector = ({
                 <li
                   key={key}
                   className={activeLibrary === library ? "active" : ""}
-                  onClick={() => handleLibraryChange(library)}
+                  onClick={() => funcRef.current.handleLibraryChange(library)}
                 >
                   {library}
                 </li>
@@ -274,7 +325,7 @@ const ReactIconsSelector = ({
                     <div
                       key={index}
                       className="riselector-icon-item"
-                      onClick={() => handleIconSelect(name, libraryName)}
+                      onClick={() => funcRef.current.handleIconSelect(name, libraryName)}
                       title={name}
                     >
                       {React.createElement(IconComponent, { size: Math.min(20, iconSize - 15) })}
@@ -295,7 +346,7 @@ const ReactIconsSelector = ({
         type="button"
         className={buttonClassName}
         style={buttonStyle}
-        onClick={openModal}
+        onClick={funcRef.current.openModal}
         ref={buttonRef}
       >
         {value
