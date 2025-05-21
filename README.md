@@ -3,6 +3,25 @@
 
 A simple and customizable icon selector component supporting multiple icon libraries, built with the react-icons library for use in your React applications.
 
+<p align="center">
+  <img src="./docs/images/demo.png" alt="React Icons Selector Demo" width="350" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/batuhankaan/react-icons-selector/star">
+    <img alt="GitHub stars" src="https://img.shields.io/github/stars/batuhankaan/react-icons-selector?style=social">
+  </a>
+  <a href="https://www.npmjs.com/package/react-icons-selector">
+    <img alt="npm" src="https://img.shields.io/npm/v/react-icons-selector">
+  </a>
+  <a href="https://www.npmjs.com/package/react-icons-selector">
+    <img alt="npm downloads" src="https://img.shields.io/npm/dm/react-icons-selector">
+  </a>
+  <a href="https://github.com/batuhankaan/react-icons-selector/blob/master/LICENSE">
+    <img alt="License" src="https://img.shields.io/github/license/batuhankaan/react-icons-selector">
+  </a>
+</p>
+
 ## Table of Contents
 
 - [Features](#features)
