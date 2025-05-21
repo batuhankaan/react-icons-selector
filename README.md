@@ -189,9 +189,14 @@ This package has the following peer dependencies:
 
 ## Changelog
 
+### v0.3.4
+- Fixed "Maximum update depth exceeded" error with a comprehensive rewrite of dependency management
+- Implemented proper useCallback and useRef patterns to prevent dependency cycles
+- Eliminated circular dependencies causing infinite render loops
+- Improved stability and performance by optimizing state update patterns
+
 ### v0.3.3
-- Fixed "Maximum update depth exceeded" error that could occur in certain situations
-- Optimized useEffect dependency management to prevent infinite render loops
+- Initial attempt to fix "Maximum update depth exceeded" error
 
 ## RenderIcon Component
 
