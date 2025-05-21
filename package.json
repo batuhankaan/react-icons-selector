@@ -1,6 +1,6 @@
 {
   "name": "react-icons-selector",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "A customizable icon picker component for React with support for multiple icon libraries.",
   "main": "lib/ReactIconsSelector.js",
   "keywords": [
@@ -16,6 +16,11 @@
   },
   "author": "Batuhan Kaan",
   "homepage": "https://github.com/batuhankaan/react-icons-selector#readme",
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0",
+    "react-icons": ">=4.0.0"
+  },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
